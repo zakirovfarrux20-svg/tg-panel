@@ -193,6 +193,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const API_BASE = params.get("api");
+    const AUTH_TOKEN = params.get("token") || "";
 
     const userName = (tg.initDataUnsafe.user && (tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username)) || "";
     document.getElementById("user-info").textContent = userName ? `Привет, ${userName}` : "Управление в один тап";
@@ -218,7 +219,8 @@
       const opts = {
         method,
         headers: {
-          "X-Init-Data": tg.initData,
+          "X-Init-Data": tg.initData || "",
+          "X-Auth-Token": AUTH_TOKEN,
           "Content-Type": "application/json",
         },
       };
