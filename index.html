@@ -12,143 +12,365 @@
       padding: 0;
       min-height: 100vh;
       background: var(--tg-theme-bg-color, #17212b);
-      color: var(--tg-theme-text-color, #ffffff);
+      color: var(--tg-theme-text-color, #fff);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
-    body {
-      padding: 24px 20px 32px;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-    .header-emoji {
-      font-size: 48px;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .header h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin: 0 0 4px;
-    }
-    .header p {
-      font-size: 14px;
-      color: var(--tg-theme-hint-color, #8a96a3);
-      margin: 0;
-    }
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .btn {
-      width: 100%;
-      padding: 16px 18px;
+    body { padding: 16px 16px 80px; max-width: 520px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 18px; }
+    .header-emoji { font-size: 42px; line-height: 1; }
+    .header h1 { font-size: 20px; margin: 6px 0 2px; }
+    .header p { font-size: 13px; color: var(--tg-theme-hint-color, #8a96a3); margin: 0; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .card {
       background: var(--tg-theme-secondary-bg-color, #232e3c);
-      color: var(--tg-theme-text-color, #ffffff);
-      border: none;
       border-radius: 14px;
-      font-size: 16px;
-      font-weight: 500;
-      text-align: left;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      transition: transform .08s ease, opacity .15s ease, background .15s ease;
-      -webkit-tap-highlight-color: transparent;
+      padding: 14px 16px;
+      margin-bottom: 10px;
     }
-    .btn:active {
-      transform: scale(0.98);
-      opacity: 0.85;
-    }
-    .btn-primary {
+    .card-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+    .card-row { display: flex; justify-content: space-between; font-size: 14px; padding: 2px 0; }
+    .card-row .muted { color: var(--tg-theme-hint-color, #8a96a3); }
+    .card-row b { font-weight: 600; }
+
+    .btn {
+      width: 100%; padding: 14px 16px; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 500; cursor: pointer;
       background: var(--tg-theme-button-color, #2ea6ff);
-      color: var(--tg-theme-button-text-color, #ffffff);
+      color: var(--tg-theme-button-text-color, #fff);
+      transition: opacity .15s, transform .08s;
+      -webkit-tap-highlight-color: transparent;
+      display: flex; align-items: center; gap: 12px;
     }
-    .btn-emoji {
-      font-size: 24px;
-      line-height: 1;
-      width: 32px;
+    .btn:active { transform: scale(.98); opacity: .85; }
+    .btn.secondary {
+      background: var(--tg-theme-secondary-bg-color, #232e3c);
+      color: var(--tg-theme-text-color, #fff);
+    }
+    .btn.danger { background: #d54848; color: #fff; }
+    .btn-emoji { font-size: 22px; }
+    .btn-stack > .btn { margin-bottom: 10px; }
+
+    input, textarea, select {
+      width: 100%; padding: 12px 14px;
+      background: var(--tg-theme-secondary-bg-color, #232e3c);
+      color: var(--tg-theme-text-color, #fff);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    label { display: block; font-size: 13px; color: var(--tg-theme-hint-color, #8a96a3); margin-bottom: 6px; }
+
+    .back-btn {
+      background: none; border: none; color: var(--tg-theme-link-color, #6ab3f3);
+      font-size: 14px; cursor: pointer; padding: 0; margin-bottom: 12px;
+    }
+
+    .progress {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      margin: 4px 0 8px;
+      overflow: hidden;
+    }
+    .progress-bar { height: 100%; background: var(--tg-theme-button-color, #2ea6ff); transition: width .3s; }
+    .progress.no .progress-bar { background: #d54848; }
+
+    .vote-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 14px; }
+
+    .empty { text-align: center; color: var(--tg-theme-hint-color, #8a96a3); padding: 40px 20px; }
+    .loader { text-align: center; padding: 32px; color: var(--tg-theme-hint-color, #8a96a3); font-size: 14px; }
+    .error { color: #ff7a7a; padding: 12px; text-align: center; font-size: 14px; }
+
+    .total-bar {
+      background: var(--tg-theme-secondary-bg-color, #232e3c);
+      padding: 12px 16px;
+      border-radius: 12px;
       text-align: center;
-      flex-shrink: 0;
+      font-size: 14px;
+      margin-top: 8px;
     }
-    .btn-text {
-      flex: 1;
+
+    .footer-bar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: var(--tg-theme-bg-color, #17212b);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; padding: 8px; gap: 6px;
+      max-width: 520px; margin: 0 auto;
     }
-    .btn-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 2px;
+    .nav-btn {
+      flex: 1; padding: 10px 4px; border: none; border-radius: 10px;
+      background: transparent; color: var(--tg-theme-hint-color, #8a96a3);
+      font-size: 12px; cursor: pointer; display: flex; flex-direction: column; gap: 2px;
+      align-items: center;
     }
-    .btn-desc {
-      font-size: 13px;
-      color: var(--tg-theme-hint-color, #8a96a3);
-      font-weight: 400;
-    }
-    .btn-primary .btn-desc {
-      color: rgba(255,255,255,0.8);
-    }
-    .footer {
-      margin-top: 28px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--tg-theme-hint-color, #8a96a3);
-    }
+    .nav-btn.active { color: var(--tg-theme-button-color, #2ea6ff); }
+    .nav-btn-emoji { font-size: 20px; }
   </style>
 </head>
 <body>
+
   <div class="header">
     <div class="header-emoji">👑</div>
     <h1>Админ-панель</h1>
-    <p>Управляй ботом в один тап</p>
+    <p id="user-info">Загрузка...</p>
   </div>
 
-  <div class="actions">
-    <button class="btn btn-primary" onclick="send('stats')">
-      <span class="btn-emoji">📊</span>
-      <span class="btn-text">
-        <div class="btn-title">Статистика групп</div>
-        <div class="btn-desc">Сколько людей в каждой из 10 групп</div>
-      </span>
-    </button>
+  <!-- STATS SCREEN -->
+  <div id="screen-stats" class="screen active">
+    <div id="stats-body">
+      <div class="loader">Загрузка статистики...</div>
+    </div>
+  </div>
 
-    <button class="btn" onclick="send('poll_new')">
+  <!-- NEW POLL SCREEN -->
+  <div id="screen-new" class="screen">
+    <label>Группа</label>
+    <select id="poll-group"></select>
+
+    <label>Вопрос для голосования</label>
+    <textarea id="poll-question" placeholder="Например: Идём в кино в субботу?"></textarea>
+
+    <button class="btn" onclick="createPoll()">
       <span class="btn-emoji">🗳</span>
-      <span class="btn-text">
-        <div class="btn-title">Создать голосование</div>
-        <div class="btn-desc">Да / Нет в любой группе</div>
-      </span>
+      <span>Отправить голосование</span>
     </button>
-
-    <button class="btn" onclick="send('poll_list')">
-      <span class="btn-emoji">📋</span>
-      <span class="btn-text">
-        <div class="btn-title">Результаты голосований</div>
-        <div class="btn-desc">Кто как проголосовал и проценты</div>
-      </span>
-    </button>
+    <div id="new-poll-status" style="margin-top: 10px;"></div>
   </div>
 
-  <div class="footer">@PracticeLogBot</div>
+  <!-- POLLS LIST SCREEN -->
+  <div id="screen-polls" class="screen">
+    <div id="polls-body">
+      <div class="loader">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- POLL DETAIL SCREEN -->
+  <div id="screen-poll-detail" class="screen">
+    <button class="back-btn" onclick="showScreen('polls')">← К списку</button>
+    <div id="poll-detail-body">
+      <div class="loader">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="footer-bar">
+    <button class="nav-btn active" data-screen="stats" onclick="showScreen('stats')">
+      <span class="nav-btn-emoji">📊</span>
+      <span>Статистика</span>
+    </button>
+    <button class="nav-btn" data-screen="new" onclick="showScreen('new')">
+      <span class="nav-btn-emoji">🗳</span>
+      <span>Создать</span>
+    </button>
+    <button class="nav-btn" data-screen="polls" onclick="showScreen('polls')">
+      <span class="nav-btn-emoji">📋</span>
+      <span>Голосования</span>
+    </button>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-    tg.enableClosingConfirmation();
-    if (tg.setHeaderColor) {
-      try { tg.setHeaderColor('secondary_bg_color'); } catch (e) {}
+
+    const params = new URLSearchParams(window.location.search);
+    const API_BASE = params.get("api");
+
+    const userName = (tg.initDataUnsafe.user && (tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username)) || "";
+    document.getElementById("user-info").textContent = userName ? `Привет, ${userName}` : "Управление в один тап";
+
+    function showScreen(name) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      const screen = document.getElementById("screen-" + name);
+      if (screen) screen.classList.add("active");
+      const nav = document.querySelector(`.nav-btn[data-screen="${name}"]`);
+      if (nav) nav.classList.add("active");
+
+      if (name === "stats") loadStats();
+      if (name === "new") loadGroups();
+      if (name === "polls") loadPolls();
     }
 
-    function send(action) {
-      tg.HapticFeedback && tg.HapticFeedback.impactOccurred('light');
-      tg.sendData(JSON.stringify({ action: action }));
+    async function api(method, path, body) {
+      if (!API_BASE) {
+        throw new Error("API_BASE не задан. Бот должен передать URL через ?api=...");
+      }
+      const opts = {
+        method,
+        headers: {
+          "X-Init-Data": tg.initData,
+          "Content-Type": "application/json",
+        },
+      };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      const r = await fetch(API_BASE.replace(/\/$/, "") + path, opts);
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        throw new Error(data.error || `HTTP ${r.status}`);
+      }
+      return data;
     }
+
+    async function loadStats() {
+      const body = document.getElementById("stats-body");
+      body.innerHTML = '<div class="loader">Загрузка статистики...</div>';
+      try {
+        const data = await api("GET", "/api/stats");
+        let totalMembers = 0, totalAssigned = 0;
+        body.innerHTML = "";
+        data.forEach(g => {
+          totalMembers += g.members || 0;
+          totalAssigned += g.assigned || 0;
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-title">🔸 ${escapeHtml(g.title)}</div>
+            <div class="card-row"><span class="muted">👥 В группе</span><b>${g.members ?? "?"}</b></div>
+            <div class="card-row"><span class="muted">🎯 Назначено ботом</span><b>${g.assigned ?? 0}</b></div>
+          `;
+          body.appendChild(card);
+        });
+        const total = document.createElement("div");
+        total.className = "total-bar";
+        total.innerHTML = `📈 Итого: <b>${totalMembers}</b> чел. / <b>${totalAssigned}</b> назначено`;
+        body.appendChild(total);
+      } catch (e) {
+        body.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function loadGroups() {
+      const sel = document.getElementById("poll-group");
+      sel.innerHTML = '<option>Загрузка...</option>';
+      try {
+        const data = await api("GET", "/api/groups");
+        sel.innerHTML = "";
+        data.forEach(g => {
+          const opt = document.createElement("option");
+          opt.value = g.id;
+          opt.textContent = g.title;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        sel.innerHTML = `<option>Ошибка: ${escapeHtml(e.message)}</option>`;
+      }
+    }
+
+    async function createPoll() {
+      const groupId = document.getElementById("poll-group").value;
+      const question = document.getElementById("poll-question").value.trim();
+      const status = document.getElementById("new-poll-status");
+      if (!question) {
+        status.innerHTML = '<div class="error">Введи вопрос</div>';
+        return;
+      }
+      status.innerHTML = '<div class="loader">Отправляем...</div>';
+      try {
+        const data = await api("POST", "/api/polls", { group_id: groupId, question });
+        status.innerHTML = `<div class="card" style="text-align:center;">✅ Голосование #${data.poll_id} отправлено в группу</div>`;
+        document.getElementById("poll-question").value = "";
+        tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success");
+      } catch (e) {
+        status.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function loadPolls() {
+      const body = document.getElementById("polls-body");
+      body.innerHTML = '<div class="loader">Загрузка...</div>';
+      try {
+        const data = await api("GET", "/api/polls");
+        if (!data.length) {
+          body.innerHTML = '<div class="empty">📭 Голосований пока нет</div>';
+          return;
+        }
+        body.innerHTML = "";
+        data.forEach(p => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.cursor = "pointer";
+          const status = p.closed ? "🔒" : "🟢";
+          card.innerHTML = `
+            <div class="card-title">${status} #${p.id} — ${escapeHtml(p.question)}</div>
+            <div class="card-row"><span class="muted">${p.closed ? "Закрыто" : "Активное"}</span></div>
+          `;
+          card.onclick = () => openPollDetail(p.id);
+          body.appendChild(card);
+        });
+      } catch (e) {
+        body.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function openPollDetail(pollId) {
+      showScreen("poll-detail");
+      const body = document.getElementById("poll-detail-body");
+      body.innerHTML = '<div class="loader">Загрузка...</div>';
+      try {
+        const p = await api("GET", "/api/polls/" + pollId);
+        const total = p.yes.length + p.no.length;
+        const yesPct = total ? Math.round(p.yes.length * 100 / total) : 0;
+        const noPct = total ? 100 - yesPct : 0;
+        const fmt = (u) => u.username ? "@" + u.username : (u.first_name || u.user_id);
+        const yesList = p.yes.map(u => `<div class="vote-row">✅ ${escapeHtml(fmt(u))}</div>`).join("") || '<div class="muted" style="padding: 4px 0;">никого</div>';
+        const noList = p.no.map(u => `<div class="vote-row">❌ ${escapeHtml(fmt(u))}</div>`).join("") || '<div class="muted" style="padding: 4px 0;">никого</div>';
+        body.innerHTML = `
+          <div class="card">
+            <div class="card-title">${p.closed ? "🔒" : "🟢"} Голосование #${p.id}</div>
+            <div style="font-size: 15px; margin-bottom: 12px;">${escapeHtml(p.question)}</div>
+
+            <div class="card-row"><span>✅ Да — <b>${p.yes.length}</b> (${yesPct}%)</span></div>
+            <div class="progress"><div class="progress-bar" style="width:${yesPct}%"></div></div>
+
+            <div class="card-row"><span>❌ Нет — <b>${p.no.length}</b> (${noPct}%)</span></div>
+            <div class="progress no"><div class="progress-bar" style="width:${noPct}%"></div></div>
+
+            <div class="card-row" style="margin-top: 6px;"><span class="muted">👥 Всего</span><b>${total}</b></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">✅ Проголосовали ДА (${p.yes.length})</div>
+            ${yesList}
+          </div>
+
+          <div class="card">
+            <div class="card-title">❌ Проголосовали НЕТ (${p.no.length})</div>
+            ${noList}
+          </div>
+
+          ${p.closed ? "" : '<button class="btn danger" onclick="closePoll(' + p.id + ')"><span class="btn-emoji">🔒</span><span>Закрыть голосование</span></button>'}
+        `;
+      } catch (e) {
+        body.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function closePoll(pollId) {
+      try {
+        await api("POST", "/api/polls/" + pollId + "/close");
+        tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success");
+        openPollDetail(pollId);
+      } catch (e) {
+        alert("Ошибка: " + e.message);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    // initial load
+    loadStats();
   </script>
 </body>
 </html>
