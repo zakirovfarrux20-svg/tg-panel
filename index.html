@@ -159,11 +159,22 @@
     </div>
   </div>
 
+  <!-- USERS SCREEN -->
+  <div id="screen-users" class="screen">
+    <div id="users-body">
+      <div class="loader">Загрузка...</div>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV -->
   <div class="footer-bar">
     <button class="nav-btn active" data-screen="stats" onclick="showScreen('stats')">
       <span class="nav-btn-emoji">📊</span>
-      <span>Статистика</span>
+      <span>Группы</span>
+    </button>
+    <button class="nav-btn" data-screen="users" onclick="showScreen('users')">
+      <span class="nav-btn-emoji">👥</span>
+      <span>Юзеры</span>
     </button>
     <button class="nav-btn" data-screen="new" onclick="showScreen('new')">
       <span class="nav-btn-emoji">🗳</span>
@@ -171,7 +182,7 @@
     </button>
     <button class="nav-btn" data-screen="polls" onclick="showScreen('polls')">
       <span class="nav-btn-emoji">📋</span>
-      <span>Голосования</span>
+      <span>Голосов.</span>
     </button>
   </div>
 
@@ -195,6 +206,7 @@
       if (nav) nav.classList.add("active");
 
       if (name === "stats") loadStats();
+      if (name === "users") loadUsers();
       if (name === "new") loadGroups();
       if (name === "polls") loadPolls();
     }
@@ -224,23 +236,60 @@
       body.innerHTML = '<div class="loader">Загрузка статистики...</div>';
       try {
         const data = await api("GET", "/api/stats");
-        let totalMembers = 0, totalAssigned = 0;
+        let totalMembers = 0, totalAssigned = 0, totalRegistered = 0;
         body.innerHTML = "";
         data.forEach(g => {
           totalMembers += g.members || 0;
           totalAssigned += g.assigned || 0;
+          totalRegistered += g.registered || 0;
           const card = document.createElement("div");
           card.className = "card";
           card.innerHTML = `
             <div class="card-title">🔸 ${escapeHtml(g.title)}</div>
             <div class="card-row"><span class="muted">👥 В группе</span><b>${g.members ?? "?"}</b></div>
-            <div class="card-row"><span class="muted">🎯 Назначено ботом</span><b>${g.assigned ?? 0}</b></div>
+            <div class="card-row"><span class="muted">✅ Зарегистрировано</span><b>${g.registered ?? 0}</b></div>
+            <div class="card-row"><span class="muted">🎯 Всего назначено</span><b>${g.assigned ?? 0}</b></div>
           `;
           body.appendChild(card);
         });
         const total = document.createElement("div");
         total.className = "total-bar";
-        total.innerHTML = `📈 Итого: <b>${totalMembers}</b> чел. / <b>${totalAssigned}</b> назначено`;
+        total.innerHTML = `📈 Итого: <b>${totalMembers}</b> в группах / <b>${totalRegistered}</b> зарегистрировано`;
+        body.appendChild(total);
+      } catch (e) {
+        body.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    async function loadUsers() {
+      const body = document.getElementById("users-body");
+      body.innerHTML = '<div class="loader">Загрузка пользователей...</div>';
+      try {
+        const [users, groups] = await Promise.all([
+          api("GET", "/api/users"),
+          api("GET", "/api/groups"),
+        ]);
+        const groupMap = {};
+        groups.forEach(g => { groupMap[g.id] = g.title; });
+        if (!users.length) {
+          body.innerHTML = '<div class="empty">📭 Пока никто не зарегистрировался</div>';
+          return;
+        }
+        body.innerHTML = "";
+        users.forEach(u => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-title">${escapeHtml(u.name || "")} ${escapeHtml(u.surname || "")}</div>
+            <div class="card-row"><span class="muted">📱 Телефон</span><b>${escapeHtml(u.phone || "—")}</b></div>
+            <div class="card-row"><span class="muted">📍 Группа</span><b>${escapeHtml(groupMap[u.group_id] || u.group_id)}</b></div>
+            <div class="card-row"><span class="muted">@username</span><b>${u.username ? "@" + escapeHtml(u.username) : "—"}</b></div>
+          `;
+          body.appendChild(card);
+        });
+        const total = document.createElement("div");
+        total.className = "total-bar";
+        total.innerHTML = `👥 Всего зарегистрировано: <b>${users.length}</b>`;
         body.appendChild(total);
       } catch (e) {
         body.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
