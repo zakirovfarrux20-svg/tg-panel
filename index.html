@@ -88,6 +88,27 @@
     .loader { text-align: center; padding: 32px; color: var(--tg-theme-hint-color, #8a96a3); font-size: 14px; }
     .error { color: #ff7a7a; padding: 12px; text-align: center; font-size: 14px; }
 
+    .group-picker { margin-bottom: 14px; }
+    .group-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px;
+      background: var(--tg-theme-secondary-bg-color, #232e3c);
+      border-radius: 10px; margin-bottom: 6px; cursor: pointer;
+      font-size: 15px;
+      transition: background .15s;
+    }
+    .group-row:active { background: rgba(255,255,255,0.08); }
+    .group-row input[type="checkbox"] {
+      width: 20px; height: 20px;
+      accent-color: var(--tg-theme-button-color, #2ea6ff);
+      margin: 0; flex-shrink: 0; cursor: pointer;
+    }
+    .group-row-all {
+      background: linear-gradient(135deg, rgba(46,166,255,0.15), rgba(46,166,255,0.05));
+      border: 1px solid rgba(46,166,255,0.25);
+      margin-bottom: 10px;
+    }
+
     .type-tabs {
       display: flex; gap: 6px; margin-bottom: 16px;
       background: var(--tg-theme-secondary-bg-color, #232e3c);
@@ -152,7 +173,13 @@
     </div>
 
     <label>Куда отправить</label>
-    <select id="poll-group"></select>
+    <div class="group-picker">
+      <label class="group-row group-row-all">
+        <input type="checkbox" id="all-groups-check" onchange="toggleAllGroups(this)">
+        <span><b>🌍 Все группы</b></span>
+      </label>
+      <div id="group-list"></div>
+    </div>
 
     <label id="content-label">Вопрос для голосования</label>
     <textarea id="poll-question" placeholder="Например: Идём в кино в субботу?"></textarea>
@@ -343,36 +370,51 @@
     }
 
     async function loadGroups() {
-      const sel = document.getElementById("poll-group");
-      sel.innerHTML = '<option>Загрузка...</option>';
+      const list = document.getElementById("group-list");
+      list.innerHTML = '<div class="loader">Загрузка...</div>';
       try {
         const data = await api("GET", "/api/groups");
-        sel.innerHTML = "";
-        const allOpt = document.createElement("option");
-        allOpt.value = "all";
-        allOpt.textContent = `🌍 Все группы (${data.length})`;
-        sel.appendChild(allOpt);
+        list.innerHTML = "";
         data.forEach(g => {
-          const opt = document.createElement("option");
-          opt.value = g.id;
-          opt.textContent = g.title;
-          sel.appendChild(opt);
+          const row = document.createElement("label");
+          row.className = "group-row";
+          row.innerHTML = `<input type="checkbox" class="group-check" value="${g.id}" onchange="onGroupToggle()"><span>${escapeHtml(g.title)}</span>`;
+          list.appendChild(row);
         });
+        document.getElementById("all-groups-check").checked = false;
       } catch (e) {
-        sel.innerHTML = `<option>Ошибка: ${escapeHtml(e.message)}</option>`;
+        list.innerHTML = `<div class="error">Ошибка: ${escapeHtml(e.message)}</div>`;
       }
     }
 
+    function toggleAllGroups(cb) {
+      document.querySelectorAll(".group-check").forEach(c => c.checked = cb.checked);
+    }
+
+    function onGroupToggle() {
+      const all = document.querySelectorAll(".group-check");
+      const checked = document.querySelectorAll(".group-check:checked");
+      document.getElementById("all-groups-check").checked = (all.length > 0 && checked.length === all.length);
+    }
+
+    function getSelectedGroupIds() {
+      if (document.getElementById("all-groups-check").checked) return "all";
+      return Array.from(document.querySelectorAll(".group-check:checked")).map(c => parseInt(c.value));
+    }
+
     async function createContent() {
-      const groupVal = document.getElementById("poll-group").value;
+      const target = getSelectedGroupIds();
       const content = document.getElementById("poll-question").value.trim();
       const status = document.getElementById("new-poll-status");
+      if (target !== "all" && target.length === 0) {
+        status.innerHTML = '<div class="error">Выбери хотя бы одну группу</div>';
+        return;
+      }
       if (!content) {
         status.innerHTML = `<div class="error">Введи ${currentType === "poll" ? "вопрос" : "текст"}</div>`;
         return;
       }
       status.innerHTML = '<div class="loader">Отправляем...</div>';
-      const target = groupVal === "all" ? "all" : [parseInt(groupVal)];
       try {
         let data;
         if (currentType === "poll") {
