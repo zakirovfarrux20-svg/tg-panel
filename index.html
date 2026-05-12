@@ -88,6 +88,35 @@
     .loader { text-align: center; padding: 32px; color: var(--tg-theme-hint-color, #8a96a3); font-size: 14px; }
     .error { color: #ff7a7a; padding: 12px; text-align: center; font-size: 14px; }
 
+    .violations {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .violations-title {
+      font-size: 13px;
+      color: var(--tg-theme-hint-color, #8a96a3);
+      margin-bottom: 6px;
+    }
+    .violation-row {
+      background: rgba(255,138,138,0.07);
+      border-left: 3px solid #ff8a8a;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .vio-head {
+      display: flex; justify-content: space-between; margin-bottom: 3px;
+    }
+    .vio-word { font-size: 12px; margin-bottom: 2px; }
+    .vio-text {
+      font-size: 12px;
+      color: var(--tg-theme-hint-color, #8a96a3);
+      font-style: italic;
+      word-break: break-word;
+    }
+
     .group-picker { margin-bottom: 14px; }
     .group-row {
       display: flex; align-items: center; gap: 12px;
@@ -342,6 +371,19 @@
           const warningRow = u.warnings > 0
             ? `<div class="card-row"><span class="muted">⚠️ Нарушений</span><b style="color:#ff8a8a;">${u.warnings}</b></div>`
             : "";
+          const violationsBlock = (u.violations && u.violations.length)
+            ? `<div class="violations">
+                <div class="violations-title">📜 История нарушений:</div>
+                ${u.violations.map(v => {
+                  const label = v.action === "warning" ? "⚠️ Предупр." : (v.action === "mute_10m" ? "🔇 Мут 10мин" : "🔇 Мут 1час");
+                  return `<div class="violation-row">
+                    <div class="vio-head"><b>${label}</b><span class="muted">${escapeHtml(fmtDate(v.at))}</span></div>
+                    <div class="vio-word">Слово: <b style="color:#ff8a8a;">${escapeHtml(v.word || "")}</b></div>
+                    <div class="vio-text">«${escapeHtml(v.text || "")}»</div>
+                  </div>`;
+                }).join("")}
+              </div>`
+            : "";
           const unmuteBtn = u.warnings > 0
             ? `<button class="btn danger" style="margin-top:10px;" onclick="unmuteUser(${u.user_id}, ${u.group_id})"><span class="btn-emoji">🔓</span><span>Снять мут / сбросить нарушения</span></button>`
             : "";
@@ -351,6 +393,7 @@
             <div class="card-row"><span class="muted">📍 Группа</span><b>${escapeHtml(groupMap[u.group_id] || u.group_id)}</b></div>
             <div class="card-row"><span class="muted">@username</span><b>${u.username ? "@" + escapeHtml(u.username) : "—"}</b></div>
             ${warningRow}
+            ${violationsBlock}
             ${unmuteBtn}
           `;
           body.appendChild(card);
