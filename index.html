@@ -434,6 +434,21 @@
       }
     }
 
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s.replace(" ", "T") + "Z");
+      if (isNaN(d.getTime())) return s;
+      const pad = (n) => String(n).padStart(2, "0");
+      const today = new Date();
+      const sameDay = d.toDateString() === today.toDateString();
+      const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+      const isYest = d.toDateString() === yest.toDateString();
+      const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      if (sameDay) return `сегодня в ${time}`;
+      if (isYest) return `вчера в ${time}`;
+      return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} в ${time}`;
+    }
+
     async function loadPolls() {
       const body = document.getElementById("polls-body");
       body.innerHTML = '<div class="loader">Загрузка...</div>';
@@ -451,7 +466,8 @@
           const status = p.closed ? "🔒" : "🟢";
           card.innerHTML = `
             <div class="card-title">${status} #${p.id} — ${escapeHtml(p.question)}</div>
-            <div class="card-row"><span class="muted">${p.closed ? "Закрыто" : "Активное"}</span></div>
+            <div class="card-row"><span class="muted">📍 ${escapeHtml(p.group_title || "")}</span><span class="muted">${escapeHtml(fmtDate(p.created_at))}</span></div>
+            <div class="card-row"><span class="muted">${p.closed ? "🔒 Закрыто" : "🟢 Активное"}</span></div>
           `;
           card.onclick = () => openPollDetail(p.id);
           body.appendChild(card);
