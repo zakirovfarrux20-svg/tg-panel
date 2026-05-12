@@ -310,6 +310,17 @@
       }
     }
 
+    async function unmuteUser(userId, groupId) {
+      if (!confirm("Снять мут и обнулить счётчик нарушений?")) return;
+      try {
+        await api("POST", "/api/unmute", { user_id: userId, group_id: groupId });
+        tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success");
+        loadUsers();
+      } catch (e) {
+        alert("Ошибка: " + e.message);
+      }
+    }
+
     async function loadUsers() {
       const body = document.getElementById("users-body");
       body.innerHTML = '<div class="loader">Загрузка пользователей...</div>';
@@ -328,11 +339,19 @@
         users.forEach(u => {
           const card = document.createElement("div");
           card.className = "card";
+          const warningRow = u.warnings > 0
+            ? `<div class="card-row"><span class="muted">⚠️ Нарушений</span><b style="color:#ff8a8a;">${u.warnings}</b></div>`
+            : "";
+          const unmuteBtn = u.warnings > 0
+            ? `<button class="btn danger" style="margin-top:10px;" onclick="unmuteUser(${u.user_id}, ${u.group_id})"><span class="btn-emoji">🔓</span><span>Снять мут / сбросить нарушения</span></button>`
+            : "";
           card.innerHTML = `
             <div class="card-title">${escapeHtml(u.name || "")} ${escapeHtml(u.surname || "")}</div>
             <div class="card-row"><span class="muted">📱 Телефон</span><b>${escapeHtml(u.phone || "—")}</b></div>
             <div class="card-row"><span class="muted">📍 Группа</span><b>${escapeHtml(groupMap[u.group_id] || u.group_id)}</b></div>
             <div class="card-row"><span class="muted">@username</span><b>${u.username ? "@" + escapeHtml(u.username) : "—"}</b></div>
+            ${warningRow}
+            ${unmuteBtn}
           `;
           body.appendChild(card);
         });
