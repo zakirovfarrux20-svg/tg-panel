@@ -88,6 +88,21 @@
     .loader { text-align: center; padding: 32px; color: var(--tg-theme-hint-color, #8a96a3); font-size: 14px; }
     .error { color: #ff7a7a; padding: 12px; text-align: center; font-size: 14px; }
 
+    .type-tabs {
+      display: flex; gap: 6px; margin-bottom: 16px;
+      background: var(--tg-theme-secondary-bg-color, #232e3c);
+      border-radius: 10px; padding: 4px;
+    }
+    .type-tab {
+      flex: 1; padding: 10px; border: none; border-radius: 8px;
+      background: transparent; color: var(--tg-theme-hint-color, #8a96a3);
+      font-size: 14px; cursor: pointer; font-weight: 500;
+    }
+    .type-tab.active {
+      background: var(--tg-theme-button-color, #2ea6ff);
+      color: var(--tg-theme-button-text-color, #fff);
+    }
+
     .total-bar {
       background: var(--tg-theme-secondary-bg-color, #232e3c);
       padding: 12px 16px;
@@ -129,17 +144,22 @@
     </div>
   </div>
 
-  <!-- NEW POLL SCREEN -->
+  <!-- NEW POLL/POST SCREEN -->
   <div id="screen-new" class="screen">
-    <label>Группа</label>
+    <div class="type-tabs">
+      <button class="type-tab active" data-type="poll" onclick="switchType('poll')">🗳 Голосование</button>
+      <button class="type-tab" data-type="post" onclick="switchType('post')">📢 Пост</button>
+    </div>
+
+    <label>Куда отправить</label>
     <select id="poll-group"></select>
 
-    <label>Вопрос для голосования</label>
+    <label id="content-label">Вопрос для голосования</label>
     <textarea id="poll-question" placeholder="Например: Идём в кино в субботу?"></textarea>
 
-    <button class="btn" onclick="createPoll()">
-      <span class="btn-emoji">🗳</span>
-      <span>Отправить голосование</span>
+    <button class="btn" onclick="createContent()">
+      <span class="btn-emoji" id="submit-emoji">🗳</span>
+      <span id="submit-text">Отправить голосование</span>
     </button>
     <div id="new-poll-status" style="margin-top: 10px;"></div>
   </div>
@@ -298,12 +318,40 @@
       }
     }
 
+    let currentType = "poll";
+
+    function switchType(type) {
+      currentType = type;
+      document.querySelectorAll(".type-tab").forEach(t => {
+        t.classList.toggle("active", t.dataset.type === type);
+      });
+      const label = document.getElementById("content-label");
+      const ta = document.getElementById("poll-question");
+      const emoji = document.getElementById("submit-emoji");
+      const text = document.getElementById("submit-text");
+      if (type === "poll") {
+        label.textContent = "Вопрос для голосования";
+        ta.placeholder = "Например: Идём в кино в субботу?";
+        emoji.textContent = "🗳";
+        text.textContent = "Отправить голосование";
+      } else {
+        label.textContent = "Текст поста";
+        ta.placeholder = "Любой текст. Будет отправлен в выбранные группы.";
+        emoji.textContent = "📢";
+        text.textContent = "Отправить пост";
+      }
+    }
+
     async function loadGroups() {
       const sel = document.getElementById("poll-group");
       sel.innerHTML = '<option>Загрузка...</option>';
       try {
         const data = await api("GET", "/api/groups");
         sel.innerHTML = "";
+        const allOpt = document.createElement("option");
+        allOpt.value = "all";
+        allOpt.textContent = `🌍 Все группы (${data.length})`;
+        sel.appendChild(allOpt);
         data.forEach(g => {
           const opt = document.createElement("option");
           opt.value = g.id;
@@ -315,18 +363,28 @@
       }
     }
 
-    async function createPoll() {
-      const groupId = document.getElementById("poll-group").value;
-      const question = document.getElementById("poll-question").value.trim();
+    async function createContent() {
+      const groupVal = document.getElementById("poll-group").value;
+      const content = document.getElementById("poll-question").value.trim();
       const status = document.getElementById("new-poll-status");
-      if (!question) {
-        status.innerHTML = '<div class="error">Введи вопрос</div>';
+      if (!content) {
+        status.innerHTML = `<div class="error">Введи ${currentType === "poll" ? "вопрос" : "текст"}</div>`;
         return;
       }
       status.innerHTML = '<div class="loader">Отправляем...</div>';
+      const target = groupVal === "all" ? "all" : [parseInt(groupVal)];
       try {
-        const data = await api("POST", "/api/polls", { group_id: groupId, question });
-        status.innerHTML = `<div class="card" style="text-align:center;">✅ Голосование #${data.poll_id} отправлено в группу</div>`;
+        let data;
+        if (currentType === "poll") {
+          data = await api("POST", "/api/polls", { group_ids: target, question: content });
+        } else {
+          data = await api("POST", "/api/posts", { group_ids: target, text: content });
+        }
+        const okCount = (data.sent || []).length;
+        const errCount = (data.errors || []).length;
+        let msg = `✅ Отправлено в <b>${okCount}</b> групп(ы)`;
+        if (errCount) msg += `, ошибок: <b>${errCount}</b>`;
+        status.innerHTML = `<div class="card" style="text-align:center;">${msg}</div>`;
         document.getElementById("poll-question").value = "";
         tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success");
       } catch (e) {
